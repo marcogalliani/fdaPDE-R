@@ -42,3 +42,6 @@
 !DESCRIPTION
 !NAMESPACE
 inst/doc
+.Rproj.user
+
+.DS_Store
