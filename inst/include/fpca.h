@@ -60,12 +60,26 @@ template <int LocalDim, int EmbedDim> class fpca_laplace {
         //    (greedy GCV refinement).
         std::string algorithm = params.containsElementNamed("algorithm") ?
             Rcpp::as<std::string>(params["algorithm"]) : std::string("sequential");
+        // optional initialization of the iterative solvers (first guess of the scores/loadings):
+        //  - "rand" (default): randomized SVD of the data, with a random seed (the result of solvers whose
+        //    calibration depends on the starting point, as subspace_experimental, may change between runs);
+        //  - "exact": exact (Jacobi) SVD of the data, deterministic.
+        std::string init = params.containsElementNamed("init") ?
+            Rcpp::as<std::string>(params["init"]) : std::string("rand");
+        int flag;
+        if (init == "rand") {
+            flag = ComputeRandSVD;
+        } else if (init == "exact") {
+            flag = ComputeXactSVD;
+        } else {
+            Rcpp::stop("unknown fpca init '" + init + "' (rand, exact)");
+        }
         if (algorithm == "sequential") {
-            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_power_solver());
+            model_.fit(rank, lambda_grid, flag, fdapde::fpca_power_solver());
         } else if (algorithm == "subspace") {
-            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_subspace_solver());
+            model_.fit(rank, lambda_grid, flag, fdapde::fpca_subspace_solver());
         } else if (algorithm == "subspace_experimental") {
-            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_subspace_experimental_solver());
+            model_.fit(rank, lambda_grid, flag, fdapde::fpca_subspace_experimental_solver());
         } else {
             Rcpp::stop("unknown fpca algorithm '" + algorithm +
                        "' (sequential, subspace, subspace_experimental)");

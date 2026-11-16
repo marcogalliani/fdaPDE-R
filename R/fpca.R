@@ -42,9 +42,15 @@
     #'   \code{"subspace"} (joint subspace iteration, a single smoothing parameter shared by all
     #'   the components) or \code{"subspace_experimental"} (joint subspace iteration, an
     #'   independent smoothing parameter per component).
-    fit = function(npc = NULL, calibrator = NULL, algorithm = "sequential") {
+    #' @param init A string selecting the first guess of the iterative solvers: \code{"rand"}
+    #'   (default, randomized SVD of the data with a random seed) or \code{"exact"} (exact SVD,
+    #'   deterministic). With \code{"rand"}, the result of \code{"subspace_experimental"} may change
+    #'   between runs, since its calibration depends on the starting point.
+    fit = function(npc = NULL, calibrator = NULL, algorithm = "sequential", init = "rand") {
       fdapde_assert(!is.null(calibrator), "Unable to select smoothing level.")
+      fdapde_assert(init %in% c("rand", "exact"), "init must be \"rand\" or \"exact\".")
       calibrator$algorithm <- algorithm
+      calibrator$init <- init
       private$model_$fit(npc, calibrator)
     }
   ),
