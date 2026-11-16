@@ -56,13 +56,13 @@ template <int LocalDim, int EmbedDim, typename Model> class fe_ls_elliptic {
             FeCoeff<local_dim, 1, 1, vector_t> u(Rcpp::as<matrix_t>(ls["u"]));
             auto F = integral(D)(u * v);
 
-            model_.discretize(std::pair {a, F});
+            model_.discretize(fdapde::fe_ls_elliptic{a, F}.get());
         } else {   // fallback to isotropic laplacian penalty
             auto a = integral(D)(dot(grad(f), grad(v)));
             ScalarField<local_dim, decltype([](const vector_t&) { return 0; })> u;
             auto F = integral(D)(u * v);
-	    
-            model_.discretize(std::pair {a, F});
+
+            model_.discretize(fdapde::fe_ls_elliptic{a, F}.get());
         }
         model_.analyze_data(formula, gf);
     }
@@ -81,7 +81,7 @@ template <int LocalDim, int EmbedDim, typename Model> class fe_ls_elliptic {
             std::vector<double> lambda_grid = params["grid"];
 	    points = lambda_grid;
 	    
-            GridOptimizer<1> optimizer;
+            GridSearch<1> optimizer;
             optimizer.optimize(gcv, lambda_grid);
 	    optimum = optimizer.optimum()[0];
 	    values  = optimizer.values();
@@ -90,7 +90,7 @@ template <int LocalDim, int EmbedDim, typename Model> class fe_ls_elliptic {
         //     // search in initial grid
         //     std::vector<double> lambda_grid;
         //     for (int i = -9; i < 3; ++i) lambda_grid.push_back(std::pow(10, i));
-        //     GridOptimizer<1> optimizer;
+        //     GridSearch<1> optimizer;
         //     optimizer.optimize(gcv, lambda_grid);
 	//     Eigen::Matrix<double, 1, 1> init_lambda(optimizer.optimum()[0]);
 

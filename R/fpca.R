@@ -37,8 +37,14 @@
     
     #' @param npc integer denoting the number of principal components to be extracted.
     #' @param calibrator A calibrator object. Available calibrators include [gcv()].
-    fit = function(npc = NULL, calibrator = NULL) {
+    #' @param algorithm A string selecting the estimation algorithm: \code{"sequential"}
+    #'   (default, power iteration, an independent smoothing parameter per component),
+    #'   \code{"subspace"} (joint subspace iteration, a single smoothing parameter shared by all
+    #'   the components) or \code{"subspace_experimental"} (joint subspace iteration, an
+    #'   independent smoothing parameter per component).
+    fit = function(npc = NULL, calibrator = NULL, algorithm = "sequential") {
       fdapde_assert(!is.null(calibrator), "Unable to select smoothing level.")
+      calibrator$algorithm <- algorithm
       private$model_$fit(npc, calibrator)
     }
   ),
@@ -48,7 +54,9 @@
     #' @field scores A matrix containing the scores for each fPC.
     scores = function() private$model_$scores(),
     #'@field pcs A matrix containing the coefficients of the basis expansions of the fPCs.
-    pcs = function() private$model_$pcs()
+    pcs = function() private$model_$pcs(),
+    #'@field lambda A matrix containing the smoothing parameter selected for each fPC (one row per component).
+    lambda = function() private$model_$lambda()
   )
 )
 

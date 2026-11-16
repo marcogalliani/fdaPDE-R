@@ -67,7 +67,7 @@ template <int LocalDim, int EmbedDim> class TriangulationBase {
     void clear_cells_markers() { triangulation_.clear_cell_markers(); }
     const std::vector<int>& cells_markers() const { return triangulation_.cells_markers(); }
     void mark_cells(int marker, const std::vector<bool>& mask) {
-        triangulation_.mark_cells(marker, [&](const auto& cell) { return mask[cell.id()]; });
+        triangulation_.mark_cells(marker, [&](const auto& cell) -> bool { return mask[cell.id()]; });
     }
     // all indices of cells having marker = m
     std::vector<int> filter_cells_by_marker(int m) const {
@@ -138,7 +138,7 @@ template <int EmbedDim> class Triangulation<2, EmbedDim> : public TriangulationB
     // edge marker handling
     const std::vector<int>& edges_markers() const { return triangulation_.edges_markers(); }
     void mark_boundary(int marker, const std::vector<bool>& mask) {
-      triangulation_.mark_boundary(marker, [&](const auto& edge) { return mask[edge.id()]; });
+      triangulation_.mark_boundary(marker, [&](const auto& edge) -> bool { return mask[edge.id()]; });
     }
     void clear_boundary_markers() { triangulation_.clear_boundary_markers(); }
     // all indices of boundary edges having marker = m

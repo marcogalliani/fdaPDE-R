@@ -48,12 +48,28 @@ template <int LocalDim, int EmbedDim> class fpca_laplace {
         ScalarField<local_dim, decltype([](const vector_t&) { return 0; })> u;
         auto F = integral(D)(u * v);
 
-        model_.discretize(std::pair {a, F});
+        model_.discretize(fdapde::fe_ls_elliptic{a, F}.get());
 	model_.analyze_data(colname, gf);
     }
     void fit(int rank, const Rcpp::List& params) {
         std::vector<double> lambda_grid = params["grid"];
-        model_.fit(rank, lambda_grid, ComputeRandSVD);
+        // optional algorithm selection (same names as the C++ drivers of fpca-rsi):
+        //  - "sequential" (default): power iteration, one component at a time, one \lambda per component;
+        //  - "subspace": joint subspace iteration, a single \lambda shared by all the components;
+        //  - "subspace_experimental": joint subspace iteration, an independent \lambda per component
+        //    (greedy GCV refinement).
+        std::string algorithm = params.containsElementNamed("algorithm") ?
+            Rcpp::as<std::string>(params["algorithm"]) : std::string("sequential");
+        if (algorithm == "sequential") {
+            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_power_solver());
+        } else if (algorithm == "subspace") {
+            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_subspace_solver());
+        } else if (algorithm == "subspace_experimental") {
+            model_.fit(rank, lambda_grid, ComputeRandSVD, fdapde::fpca_subspace_experimental_solver());
+        } else {
+            Rcpp::stop("unknown fpca algorithm '" + algorithm +
+                       "' (sequential, subspace, subspace_experimental)");
+        }
     }
     // observers
     const matrix_t& S() const { return model_.S(); }   // scoring matrix
